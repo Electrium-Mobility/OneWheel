@@ -21,6 +21,22 @@ Commander command = Commander(Serial);
 void doTarget(char* cmd) { command.scalar(&target_velocity, cmd); }
 void doLimit(char* cmd) { command.scalar(&motor.voltage_limit, cmd); }
 
+
+// temp variable until IMU
+float IMU_Yaxis;
+
+// https://docs.simplefoc.com/pi_controller
+const float Kp = 0;
+const float Ki = 0;
+const float Kd = 0;
+const float RampConstant = 1000;
+const float LimitConstnat = _PI / 10;
+
+// velocity pid 
+// Call this with the desired velocity - current velocity. Output will be the voltage to apply to the motor.
+PIDController pid_vel{.P = Kp, .I = Ki, .D = Kd, .ramp = RampConstant, .limit = LimitConstant};
+
+
 void setup() {
 
   // driver config
