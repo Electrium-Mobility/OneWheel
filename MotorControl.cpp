@@ -33,7 +33,7 @@ BLDCDriver3PWM driver = BLDCDriver3PWM(D1, D2, D3, D4);
 // TODO: test getting encoder reading from motor
 Encoder encoder = Encoder(ENC_A, ENC_B, 500);
 
-// interrupt init
+// Interrupt init
 void doA(){encoder.handleA();}
 void doB(){encoder.handleB();}
 
