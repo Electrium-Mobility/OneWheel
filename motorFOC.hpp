@@ -1,5 +1,5 @@
-#ifndef MOTOR_FOC
-#define MOTOR_FOC
+#ifndef MOTOR_FOC_HPP
+#define MOTOR_FOC_HPP
 
 #include "Arduino.h"
 #include <SimpleFOC.h>
@@ -9,10 +9,10 @@
 
 // Defines
 // Motor Pins
-#define MOT_A D1
-#define MOT_B D2
-#define MOT_C D3
-#define MOT_EN D4
+#define MOT_A 1
+#define MOT_B 2
+#define MOT_C 3
+#define MOT_EN 4
 
 #define POLE_PAIRS 11
 

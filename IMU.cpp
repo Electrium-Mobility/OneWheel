@@ -1,6 +1,6 @@
 #include "IMU.hpp"
 
-IMU::IMU(TwoWire *wire, MPU6050 *mpu)
+IMU::IMU(TwoWire wire, MPU6050 *mpu)
 {
   (*this).Wire = wire;
   (*this).Mpu = mpu;
@@ -16,13 +16,14 @@ IMU::~IMU()
 void IMU::init()
 {   
   currentData = new IMU_data();
-  Mpu.initialize();
-  Mpu.CalibrateAccel();
-  Mpu.CalibrateGyro();
-  Mpu.setDLPFMode(1); // Enable Low Pass Filter
+  Wire.begin();
+  Mpu->initialize();
+  Mpu->CalibrateAccel();
+  Mpu->CalibrateGyro();
+  Mpu->setDLPFMode(1); // Enable Low Pass Filter
 }
 
-IMU_Data *IMU::getData()
+IMU_data *IMU::getData()
 {
   (*this).updateResult();
   return currentData;
@@ -30,8 +31,8 @@ IMU_Data *IMU::getData()
 
 void IMU::updateResult()
 {
-  Mpu.getMotion6(
-    &currentData->accx,
+  Mpu->getMotion6(
+    &currentData->accX,
     &currentData->accY,
     &currentData->accZ,
     &currentData->gyroX,
@@ -40,13 +41,17 @@ void IMU::updateResult()
   );
 
   // Convert accelerometer values to angles
-  currentData->angleX = atan2(accY, accZ) * (180 / PI);
-  currentData->angleY = atan2(accX, accZ) * (180 / PI);
+  currentData->angleX = atan2(currentData->accY, currentData->accZ)
+                        * (180 / PI);
+  currentData->angleY = atan2(currentData->accX, currentData->accZ)
+                        * (180 / PI);
 
   // Filter gyro values using the complementary filter
-  currentData->angleX = alpha * (angleX + gyroX * 0.01) 
-                          + (1 - alpha) * angleX;
-  currentData->angleY = alpha * (angleY + gyroY * 0.01) 
-                          + (1 - alpha) * angleY;
+  currentData->angleX = alpha * 
+                        (currentData->angleX + currentData->gyroX * 0.01) 
+                        + (1 - alpha) * currentData->angleX;
+  currentData->angleY = alpha *
+                        (currentData->angleY + currentData->gyroY * 0.01) 
+                        + (1 - alpha) * currentData->angleY;
 
 }

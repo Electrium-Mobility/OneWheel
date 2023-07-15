@@ -1,6 +1,48 @@
 #include <StateMachine.h>
+#include <SimpleFOC.h>
+#include <Wire.h>
+#include <MPU6050.h>
 
 #include "motorFOC.hpp"
+
+// Init BLDC motor & driver instance
+BLDCMotor motor = BLDCMotor(POLE_PAIRS);
+BLDCDriver3PWM driver = BLDCDriver3PWM(MOT_A, MOT_B, MOT_C, MOT_EN);
+
+// init motor Encoder & Interrupt 
+// https://docs.simplefoc.com/hall_sensors
+HallSensor hall_sensor = HallSensor(HALL_A, HALL_B, HALL_C, POLE_PAIRS);
+// interrupt routine initialization
+// Read Docs (here since we are using an STM32 all digital pins can be used
+// as interrupt pins)
+void doA(){hall_sensor.handleA();}
+void doB(){hall_sensor.handleB();}
+void doC(){hall_sensor.handleC();}
+
+// init PID Controller
+PIDController pid_stabalize{
+  .P = Kp, .I = Ki, .D = Kd,
+  .ramp = PID_Ramp, .limit = PID_Limit
+};
+
+// IMU Sensor
+MPU6050 mpu;
+IMU* imu = new IMU(Wire, &mpu);
+IMU_data* data = imu->getData();
+float target_pitch = 0;
+float current_pitch = 0;
+
+// Pressure Sensors 
+// TODO: Determine if its LOW off or HIGH off
+int P1_Val{LOW}, P2_Val{LOW};
+
+// temp Battery Reading
+// TODO: receive battery reading
+float batteryVoltage = 4;
+int batteryPercentage = 80;
+
+// temp temperature reading
+float component_temp = 70; // [deg C]
 
 // init State machine: https://github.com/jrullan/StateMachine
 const int STATE_DELAY = 100; // TODO:determine
@@ -55,11 +97,15 @@ void loop()
 
 void init_sequence()
 {
+  // use internal pullups
+  hall_sensor.pullup = Pullup::USE_INTERN;
+  // maximal expected velocity
+  hall_sensor.velocity_max = 1000; // 1000rad/s by default ~10,000 rpm
   // enable hall sensor hardware interrupts
-  sensor.init();
-  sensor.enableInterrupts(doA, doB, doC);
+  hall_sensor.init();
+  hall_sensor.enableInterrupts(doA, doB, doC);
   // link motor with sensor
-  motor.linkSensor(&sensor);
+  motor.linkSensor(&hall_sensor);
 
   // driver config
   driver.voltage_power_supply = 12;
@@ -93,7 +139,7 @@ void start_sequence()
     P2_Val = digitalRead(Pressure_2);
     
     imu->updateResult();
-    currentPitch = data->angleY;
+    current_pitch = data->angleY;
 }
 
 bool drive_transition()
@@ -108,7 +154,7 @@ bool drive_transition()
 
 float threshold_checks()
 {
-    bool case1 = motor.target > KICK_BACK_THRESH(float)/100 * motor.voltage_limit;
+    bool case1 = motor.target > float(KICK_BACK_THRESH)/100 * motor.voltage_limit;
     bool case2 = component_temp > HIGH_COMPONENT_TEMP;
     bool case3 = batteryVoltage > HIGH_BATTERY_VOLTAGE 
                  || batteryVoltage < LOW_BATTERY_VOLTAGE;
@@ -121,7 +167,7 @@ float threshold_checks()
     {
         // TODO: Determine kick back constant expirementally
         const float KICK_BACK_MULT_CONST {10};
-        float voltageDifference = motor.target - KICK_BACK_THRESH(float)
+        float voltageDifference = motor.target - float(KICK_BACK_THRESH)
                                   / 100 * motor.voltage_limit;
         float override = - KICK_BACK_MULT_CONST * voltageDifference;
         return override;
@@ -142,7 +188,7 @@ void driving_loop()
 
     motor.target = voltageControl;
     
-    target_pitch = threshold_checks()
+    target_pitch = threshold_checks();
 }
 
 bool regen_brake_transition()

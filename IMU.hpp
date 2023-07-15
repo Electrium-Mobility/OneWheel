@@ -1,3 +1,6 @@
+#ifndef IMU_HPP
+#define IMU_HPP
+
 #include "Arduino.h"
 #include <Wire.h>
 #include <MPU6050.h>
@@ -12,7 +15,7 @@ class IMU
 {
   private:
     const float alpha = 0.98;
-    TwoWire *Wire;
+    TwoWire Wire;
     MPU6050 *Mpu;
 
     IMU_data* currentData;
@@ -20,9 +23,11 @@ class IMU
     void init();
     
   public:
-    IMU(TwoWire *wire, MPU6050 *mpu);
+    IMU(TwoWire wire, MPU6050 *mpu);
     ~IMU();
 
     IMU_data *getData();
     void updateResult();
 };
+
+#endif
