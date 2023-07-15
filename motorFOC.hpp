@@ -5,7 +5,7 @@
 #include <SimpleFOC.h>
 #include <Wire.h>
 #include <MPU6050.h>
-#include "./IMU/IMU.hpp"
+#include "IMU.hpp"
 
 // Defines
 // Motor Pins

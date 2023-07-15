@@ -78,7 +78,7 @@ void setup() {
   motor.linkDriver(&driver);
 
   // link the motor and sensor
-  motor.linkSensor(&encoder);
+  motor.linkSensor(&sensor);
 
   // limiting motor movements
   // limit the voltage to be set to the motor
@@ -100,8 +100,6 @@ void setup() {
 }
 
 void loop() {
-  motor.loopFOC();
-  motor.move();
 
   imu->updateResult();
   current_pitch = data->angleY;
