@@ -4,8 +4,13 @@
 #include "Arduino.h"
 #include <Wire.h>
 #include <MPU6050.h>
-#include "MahonyAHRS.h"
 #include <math.h>
+
+extern "C"
+{
+  #include "MahonyAHRS.h"
+};
+
 
 struct IMU_data{
     int16_t accX{0}, accY{0}, accZ{0};
