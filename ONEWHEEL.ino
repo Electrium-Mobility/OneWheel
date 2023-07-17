@@ -49,6 +49,10 @@ const int STATE_DELAY = 100; // TODO:determine
 // int randomState = 0;
 StateMachine machine = StateMachine();
 
+// variables for time (integration)
+uint32_t current_time = 0;
+uint32_t prev_time = 0;
+
 // state functions
 void init_sequence();
 void start_sequence();
@@ -89,6 +93,11 @@ void setup()
 
 void loop()
 {
+    imu->updateResult();
+    current_time = micros();
+    sampleFreq = (1000000.0f / (current_time - prev_time));
+    prev_time = current_time;
+    
     motor.loopFOC();
     motor.move();
     machine.run();
@@ -138,7 +147,6 @@ void start_sequence()
     P1_Val = digitalRead(Pressure_1);
     P2_Val = digitalRead(Pressure_2);
     
-    imu->updateResult();
     current_pitch = data->angleY;
 }
 
@@ -177,7 +185,6 @@ float threshold_checks()
 
 void driving_loop()
 {
-    imu->updateResult();
     current_pitch = data->angleY;
 
     float x_tilt = data->angleX;

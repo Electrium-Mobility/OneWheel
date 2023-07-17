@@ -40,18 +40,25 @@ void IMU::updateResult()
     &currentData->gyroZ
   );
 
-  // Convert accelerometer values to angles
-  currentData->angleX = atan2(currentData->accY, currentData->accZ)
-                        * (180 / PI);
-  currentData->angleY = atan2(currentData->accX, currentData->accZ)
-                        * (180 / PI);
+  MahonyAHRSupdateIMU(currentData->gyroX, currentData->gyroY,
+    currentData->gyroZ, currentData->accX, currentData->accY,
+    currentData->accZ);
+  
+  // https://nescacademy.nasa.gov/review/downloadfile.php?file=IntroductiontoQuaternionsPart2of2V2.pptx&id=58&distr=Public
 
-  // Filter gyro values using the complementary filter
-  currentData->angleX = alpha * 
-                        (currentData->angleX + currentData->gyroX * 0.01) 
-                        + (1 - alpha) * currentData->angleX;
-  currentData->angleY = alpha *
-                        (currentData->angleY + currentData->gyroY * 0.01) 
-                        + (1 - alpha) * currentData->angleY;
+  const float RAD2DEG = 180 / M_PI;
+
+  // yaw (z axis)
+  // pitch (y axis)
+  // roll (x axis)
+
+  currentData->angleZ = -atan2(2.0f * (q1 * q2 + q0 * q3),
+    q0 * q0 + q1 * q1 - q2 * q2 - q3 * q3) * RAD2DEG;
+  
+  currentData->angleY = asin(2.0f * (q1 * q3 - q0 * q2)) * RAD2DEG;
+
+  currentData->angleX = atan2(2.0f * (q0 * q1 + q2 * q3),
+    q0 * q0 - q1 * q1 - q2 * q2 + q3 * q3) * RAD2DEG;
+  
 
 }
